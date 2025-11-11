@@ -1,1 +1,318 @@
-Outputs del proyecto
+# outputs.tf - Outputs consolidados del proyecto CritAlert
+
+# ============================================================================
+# INFORMACIÓN GENERAL
+# ============================================================================
+
+output "project_info" {
+  description = "Información general del proyecto"
+  value = {
+    project_name = local.project_name
+    environment  = var.environment
+    region       = local.region
+    account_id   = local.account_id
+  }
+}
+
+# ============================================================================
+# API GATEWAY
+# ============================================================================
+
+output "api_gateway" {
+  description = "Información del API Gateway"
+  value = {
+    api_id       = aws_api_gateway_rest_api.critalert.id
+    api_name     = aws_api_gateway_rest_api.critalert.name
+    base_url     = aws_api_gateway_stage.critalert.invoke_url
+    stage        = aws_api_gateway_stage.critalert.stage_name
+    
+    endpoints = {
+      submit_result = "${aws_api_gateway_stage.critalert.invoke_url}/results"
+      acknowledge_alert = "${aws_api_gateway_stage.critalert.invoke_url}/alerts/{alertId}/acknowledge"
+    }
+  }
+}
+
+# ============================================================================
+# LAMBDA FUNCTIONS
+# ============================================================================
+
+output "lambda_functions" {
+  description = "Funciones Lambda creadas"
+  value = {
+    ingestion = {
+      arn           = aws_lambda_function.ingestion.arn
+      function_name = aws_lambda_function.ingestion.function_name
+      invoke_arn    = aws_lambda_function.ingestion.invoke_arn
+    }
+    alert_handler = {
+      arn           = aws_lambda_function.alert_handler.arn
+      function_name = aws_lambda_function.alert_handler.function_name
+      invoke_arn    = aws_lambda_function.alert_handler.invoke_arn
+    }
+    normal_processor = {
+      arn           = aws_lambda_function.normal_processor.arn
+      function_name = aws_lambda_function.normal_processor.function_name
+      invoke_arn    = aws_lambda_function.normal_processor.invoke_arn
+    }
+    acknowledgment = {
+      arn           = aws_lambda_function.acknowledgment.arn
+      function_name = aws_lambda_function.acknowledgment.function_name
+      invoke_arn    = aws_lambda_function.acknowledgment.invoke_arn
+    }
+    escalation = {
+      arn           = aws_lambda_function.escalation.arn
+      function_name = aws_lambda_function.escalation.function_name
+      invoke_arn    = aws_lambda_function.escalation.invoke_arn
+    }
+  }
+}
+
+# ============================================================================
+# DYNAMODB TABLES
+# ============================================================================
+
+output "dynamodb_tables" {
+  description = "Tablas DynamoDB creadas"
+  value = {
+    critical_thresholds = {
+      name = aws_dynamodb_table.critical_thresholds.name
+      arn  = aws_dynamodb_table.critical_thresholds.arn
+    }
+    alerts = {
+      name       = aws_dynamodb_table.alerts.name
+      arn        = aws_dynamodb_table.alerts.arn
+      stream_arn = aws_dynamodb_table.alerts.stream_arn
+    }
+    physicians = {
+      name = aws_dynamodb_table.physicians.name
+      arn  = aws_dynamodb_table.physicians.arn
+    }
+    lab_results = {
+      name = aws_dynamodb_table.lab_results.name
+      arn  = aws_dynamodb_table.lab_results.arn
+    }
+    escalation_config = {
+      name = aws_dynamodb_table.escalation_config.name
+      arn  = aws_dynamodb_table.escalation_config.arn
+    }
+  }
+}
+
+# ============================================================================
+# SNS TOPICS
+# ============================================================================
+
+output "sns_topics" {
+  description = "Topics SNS para notificaciones"
+  value = {
+    critical_alerts = {
+      arn  = aws_sns_topic.critical_alerts.arn
+      name = aws_sns_topic.critical_alerts.name
+    }
+    escalated_alerts = {
+      arn  = aws_sns_topic.escalated_alerts.arn
+      name = aws_sns_topic.escalated_alerts.name
+    }
+    admin_alerts = {
+      arn  = aws_sns_topic.admin_alerts.arn
+      name = aws_sns_topic.admin_alerts.name
+    }
+    dlq = {
+      arn  = aws_sns_topic.alert_dlq.arn
+      name = aws_sns_topic.alert_dlq.name
+    }
+  }
+}
+
+# ============================================================================
+# SQS QUEUES
+# ============================================================================
+
+output "sqs_queues" {
+  description = "Colas SQS creadas"
+  value = {
+    normal_results = {
+      url = aws_sqs_queue.normal_results.url
+      arn = aws_sqs_queue.normal_results.arn
+    }
+    normal_results_dlq = {
+      url = aws_sqs_queue.normal_results_dlq.url
+      arn = aws_sqs_queue.normal_results_dlq.arn
+    }
+    ordered_results = {
+      url = aws_sqs_queue.ordered_results.url
+      arn = aws_sqs_queue.ordered_results.arn
+    }
+  }
+}
+
+# ============================================================================
+# STEP FUNCTIONS
+# ============================================================================
+
+output "step_functions" {
+  description = "State Machine de Step Functions"
+  value = {
+    escalation_workflow = {
+      arn  = aws_sfn_state_machine.escalation_workflow.arn
+      name = aws_sfn_state_machine.escalation_workflow.name
+    }
+  }
+}
+
+# ============================================================================
+# IAM ROLES
+# ============================================================================
+
+output "iam_roles" {
+  description = "Roles IAM creados"
+  value = {
+    lambda_ingestion        = aws_iam_role.lambda_ingestion.arn
+    lambda_alert_handler    = aws_iam_role.lambda_alert_handler.arn
+    lambda_normal_processor = aws_iam_role.lambda_normal_processor.arn
+    lambda_acknowledgment   = aws_iam_role.lambda_acknowledgment.arn
+    api_gateway             = aws_iam_role.api_gateway.arn
+    step_functions          = aws_iam_role.step_functions.arn
+    eventbridge             = aws_iam_role.eventbridge.arn
+  }
+}
+
+# ============================================================================
+# CLOUDWATCH
+# ============================================================================
+
+output "cloudwatch" {
+  description = "Recursos de CloudWatch"
+  value = {
+    dashboard_name = aws_cloudwatch_dashboard.critalert.dashboard_name
+    dashboard_url  = "https://console.aws.amazon.com/cloudwatch/home?region=${local.region}#dashboards:name=${aws_cloudwatch_dashboard.critalert.dashboard_name}"
+    
+    log_groups = {
+      lambda_ingestion      = aws_cloudwatch_log_group.lambda_ingestion.name
+      lambda_alert_handler  = aws_cloudwatch_log_group.lambda_alert_handler.name
+      lambda_normal_processor = aws_cloudwatch_log_group.lambda_normal_processor.name
+      lambda_acknowledgment = aws_cloudwatch_log_group.lambda_acknowledgment.name
+      lambda_escalation     = aws_cloudwatch_log_group.lambda_escalation.name
+      api_gateway           = aws_cloudwatch_log_group.api_gateway_logs.name
+      step_functions        = aws_cloudwatch_log_group.step_functions.name
+    }
+    
+    alarms = {
+      sla_compliance       = aws_cloudwatch_metric_alarm.sla_compliance_low.alarm_name
+      high_escalations     = aws_cloudwatch_metric_alarm.high_escalations.alarm_name
+      high_critical_alerts = aws_cloudwatch_metric_alarm.high_critical_alerts.alarm_name
+    }
+  }
+}
+
+# ============================================================================
+# KMS KEYS
+# ============================================================================
+
+output "kms_keys" {
+  description = "KMS Keys para encriptación"
+  value = {
+    sns = {
+      id    = aws_kms_key.sns_encryption.id
+      arn   = aws_kms_key.sns_encryption.arn
+      alias = aws_kms_alias.sns_encryption.name
+    }
+    sqs = {
+      id    = aws_kms_key.sqs_encryption.id
+      arn   = aws_kms_key.sqs_encryption.arn
+      alias = aws_kms_alias.sqs_encryption.name
+    }
+  }
+}
+
+# ============================================================================
+# CONFIGURACIÓN SLA
+# ============================================================================
+
+output "sla_configuration" {
+  description = "Configuración de SLA y escalación"
+  value = {
+    alert_sla_seconds             = var.alert_sla_seconds
+    escalation_primary_minutes    = var.escalation_primary_minutes
+    escalation_secondary_minutes  = var.escalation_secondary_minutes
+    escalation_tertiary_minutes   = var.escalation_tertiary_minutes
+  }
+}
+
+# ============================================================================
+# TESTING INFORMATION
+# ============================================================================
+
+output "testing_info" {
+  description = "Información para testing y desarrollo"
+  value = {
+    curl_examples = {
+      submit_result = <<-EOF
+        curl -X POST ${aws_api_gateway_stage.critalert.invoke_url}/results \
+          --aws-sigv4 "aws:amz:${local.region}:execute-api" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "patient_id": "P123456",
+            "patient_name": "John Doe",
+            "patient_age": 65,
+            "test_code": "K",
+            "test_name": "Potassium",
+            "value": 6.8,
+            "unit": "mmol/L",
+            "reference_range": "3.5-5.0",
+            "ordering_physician": {
+              "physician_id": "DR001",
+              "name": "Dr. Sarah Johnson",
+              "phone": "+1-555-0101",
+              "email": "s.johnson@hospital.com"
+            },
+            "test_timestamp": "2024-01-15T14:35:00Z"
+          }'
+      EOF
+      
+      acknowledge_alert = <<-EOF
+        curl -X POST ${aws_api_gateway_stage.critalert.invoke_url}/alerts/ALERT-123/acknowledge \
+          --aws-sigv4 "aws:amz:${local.region}:execute-api" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "physician_id": "DR001",
+            "acknowledgment_time": "2024-01-15T14:36:30Z",
+            "notes": "Patient contacted, treatment initiated"
+          }'
+      EOF
+    }
+    
+    aws_cli_examples = {
+      view_logs = "aws logs tail /aws/lambda/${aws_lambda_function.alert_handler.function_name} --follow"
+      list_alerts = "aws dynamodb scan --table-name ${aws_dynamodb_table.alerts.name}"
+      trigger_test_alert = "aws lambda invoke --function-name ${aws_lambda_function.alert_handler.function_name} --payload file://test-event.json response.json"
+    }
+  }
+}
+
+# ============================================================================
+# DEPLOYMENT SUMMARY
+# ============================================================================
+
+output "deployment_summary" {
+  description = "Resumen del despliegue"
+  value = {
+    message = "CritAlert desplegado exitosamente"
+    next_steps = [
+      "1. Configurar números de teléfono y emails en terraform.tfvars",
+      "2. Poblar tabla de umbrales críticos (critical_thresholds)",
+      "3. Registrar médicos en tabla physicians",
+      "4. Configurar escalación por departamento en escalation_config",
+      "5. Verificar que las subscripciones SNS estén confirmadas",
+      "6. Realizar pruebas con resultados de laboratorio",
+      "7. Monitorear el dashboard: ${aws_cloudwatch_dashboard.critalert.dashboard_name}"
+    ]
+    important_notes = [
+      "- Los emails SNS requieren confirmación manual",
+      "- Configurar autenticación IAM para el API Gateway",
+      "- Revisar los logs en CloudWatch Logs Insights",
+      "- El SLA objetivo es < 60 segundos para alertas críticas"
+    ]
+  }
+}

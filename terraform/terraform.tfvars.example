@@ -1,0 +1,141 @@
+# terraform.tfvars.example
+# Copia este archivo a terraform.tfvars y actualiza los valores
+# IMPORTANTE: NO subir terraform.tfvars a Git (está en .gitignore)
+
+# ============================================================================
+# CONFIGURACIÓN BÁSICA
+# ============================================================================
+
+aws_region = "us-east-1"
+environment = "dev" # Opciones: dev, staging, prod
+project_owner = "devops@hospital.com"
+
+# ============================================================================
+# CONFIGURACIÓN DE ALERTAS Y SLA
+# ============================================================================
+
+# SLA para envío de alertas críticas (segundos)
+alert_sla_seconds = 60
+
+# Tiempos de escalación (minutos)
+escalation_primary_minutes = 5    # Tiempo antes de escalar al médico backup
+escalation_secondary_minutes = 10 # Tiempo antes de escalar al jefe de departamento
+escalation_tertiary_minutes = 15  # Tiempo antes de escalar al administrador
+
+# ============================================================================
+# CONFIGURACIÓN DE NOTIFICACIONES
+# ============================================================================
+
+# Números de teléfono para alertas SMS (formato internacional: +1234567890)
+alert_phone_numbers = [
+  "+15551234567",  # Dr. Johnson (Primary)
+  "+15559876543"   # Dr. Chen (Backup)
+]
+
+# Emails para alertas críticas
+alert_email_addresses = [
+  "dr.johnson@hospital.com",
+  "dr.chen@hospital.com",
+  "oncall@hospital.com"
+]
+
+# Email del administrador de emergencias
+emergency_admin_email = "admin@hospital.com"
+
+# ============================================================================
+# CONFIGURACIÓN DE LAMBDA
+# ============================================================================
+
+lambda_runtime = "python3.11"
+lambda_timeout = 30
+lambda_memory_size = 256
+
+# ============================================================================
+# CONFIGURACIÓN DE DYNAMODB
+# ============================================================================
+
+# PAY_PER_REQUEST recomendado para cargas variables
+# PROVISIONED para cargas predecibles (más económico)
+dynamodb_billing_mode = "PAY_PER_REQUEST"
+
+# Habilitar recuperación point-in-time (recomendado para producción)
+enable_point_in_time_recovery = true
+
+# ============================================================================
+# CONFIGURACIÓN DE SQS
+# ============================================================================
+
+# Timeout de visibilidad para mensajes en cola (segundos)
+sqs_visibility_timeout = 300
+
+# Retención de mensajes (segundos) - máximo 14 días (1209600 segundos)
+sqs_message_retention = 1209600
+
+# ============================================================================
+# CONFIGURACIÓN DE CLOUDWATCH
+# ============================================================================
+
+# Habilitar monitoreo detallado
+enable_detailed_monitoring = true
+
+# Días de retención para logs
+log_retention_days = 30 # Opciones: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653
+
+# ============================================================================
+# UMBRALES CRÍTICOS (Valores de Laboratorio)
+# ============================================================================
+
+critical_thresholds = {
+  # Potasio (mmol/L)
+  potassium_low  = 2.5
+  potassium_high = 6.0
+
+  # Glucosa (mg/dL)
+  glucose_low  = 40
+  glucose_high = 500
+
+  # Hemoglobina (g/dL)
+  hemoglobin_low = 5.0
+
+  # Plaquetas (10^3/uL)
+  platelet_count_low = 20
+
+  # Glóbulos Blancos (10^3/uL)
+  wbc_low  = 1.0
+  wbc_high = 50.0
+}
+
+# ============================================================================
+# FEATURE FLAGS
+# ============================================================================
+
+# Habilitar alertas por llamada telefónica (requiere Amazon Connect)
+enable_phone_alerts = false
+
+# Habilitar región de backup para alta disponibilidad
+enable_backup_region = false
+backup_region = "us-west-2"
+
+# ============================================================================
+# NOTAS DE CONFIGURACIÓN POR AMBIENTE
+# ============================================================================
+
+# DESARROLLO (dev):
+# - dynamodb_billing_mode = "PAY_PER_REQUEST"
+# - enable_point_in_time_recovery = false
+# - log_retention_days = 7
+# - alert_sla_seconds = 120 (más relajado para pruebas)
+
+# STAGING (staging):
+# - dynamodb_billing_mode = "PAY_PER_REQUEST"
+# - enable_point_in_time_recovery = true
+# - log_retention_days = 30
+# - alert_sla_seconds = 60
+
+# PRODUCCIÓN (prod):
+# - dynamodb_billing_mode = "PAY_PER_REQUEST" o "PROVISIONED" (depende de carga)
+# - enable_point_in_time_recovery = true
+# - log_retention_days = 90
+# - alert_sla_seconds = 60
+# - enable_backup_region = true (recomendado)
+# - enable_detailed_monitoring = true
