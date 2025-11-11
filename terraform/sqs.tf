@@ -1,0 +1,1 @@
+# Cola SQS para resultados normales
