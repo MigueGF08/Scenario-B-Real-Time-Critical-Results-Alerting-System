@@ -315,4 +315,4 @@ output "deployment_summary" {
       "- El SLA objetivo es < 60 segundos para alertas críticas"
     ]
   }
-}
+}lambda/
