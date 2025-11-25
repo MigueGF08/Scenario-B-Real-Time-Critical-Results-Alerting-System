@@ -1,1 +1,0 @@
-# Configuración principal y provider
